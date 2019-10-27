@@ -59,12 +59,14 @@ class Flower:
 
     # Wait for event, or keyboard interrupt
     def loop(self):
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            self.observer.stop()
-        self.observer.join()
+        while True:
+            time.sleep(0.1)
+            received = self.arduino.readline();
+            print(received)
+            if (b'0' in received):
+                os.system("rm ./flower/*.jpg")
+                print("DATA DELETED")
+
 
 
     # desctuctor

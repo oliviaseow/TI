@@ -29,7 +29,7 @@ void setup() {
 }
 
 
-void loop()
+void handleSerial()
 {
     if (Serial.available())
     {
@@ -51,10 +51,7 @@ void loop()
             }
         } else if (fileSize == '0') {
             // go back to initial position
-            Serial.println("Reset");
-            flower.writeMicroseconds(unscrew);
-            delay(accumulator);
-            accumulator = 0;
+            reset();
         } else if (fileSize == '<') {               // screw manually
             // go back to initial position
             Serial.println("screwing");
@@ -71,10 +68,23 @@ void loop()
             Serial.println("file size incorrect");
         }
         flower.writeMicroseconds(servo_off);
+    }
+}
 
-        // watch for microphone sensor input
-        // if microphone is blown, arduino sends byte back to python to delete contents
+
     }
 
-    delay(50);
+
+void reset() {
+    // go back to initial position
+    Serial.println("Reset");
+    flower.writeMicroseconds(unscrew);
+    delay(accumulator);
+    accumulator = 0;
+}
+
+
+void loop()
+{
+    handleSerial();
 }
