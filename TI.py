@@ -63,7 +63,7 @@ class Flower:
             time.sleep(0.1)
             received = self.arduino.readline();
             print(received)
-            if (b'0' in received):
+            if (b'!' in received):
                 os.system("rm ./flower/*.jpg")
                 print("DATA DELETED")
 
