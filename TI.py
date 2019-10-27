@@ -3,44 +3,80 @@
 import serial
 import sys
 import time
-import logging
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
 import os
+import platform
+import glob
 
-# open serial port
 
-arduino = serial.Serial(
-		port='/dev/cu.usbserial-AH0103EA',
-		baudrate=9600,
-		parity=serial.PARITY_NONE,
-		stopbits=serial.STOPBITS_ONE,
-		bytesize=serial.EIGHTBITS
-)
+class Flower:
+    arduino = serial.Serial()
+    observer = Observer()
 
-def on_created(event):
-	print(f"{event.src_path} has been created with size {os.path.getsize(event.src_path)}!")
-	arduino.write(os.path.getsize(event.src_path))
+    # constructor
+    def __init__(self):
+        self.arduino = self.serial_init()
+        self.handler_init()
 
-while True:
-	#if arduino.readline() == 'READY':
-	logging.basicConfig(level=logging.INFO,
-						format='%(asctime)s - %(message)s',
-						datefmt='%Y-%m-%d %H:%M:%S')
-	path = "/Users/osw/Desktop/TI/flower"
-	event_handler = LoggingEventHandler()
-	event_handler.on_created = on_created
-	observer = Observer()
-	observer.schedule(event_handler, path, recursive=True)
-	observer.start()
-	try:
-		while True:
-			time.sleep(1)
-	except KeyboardInterrupt:
-		observer.stop()
-	observer.join()
 
-arduino.close()
+    def serial_init(self):
+        # Set OS dependant variables
+        PLATFORM = platform.system()
+        if "Darwin" in PLATFORM:
+            PORT_PATTERN = "/dev/cu.usbserial*"
+        elif "Linux" in PLATFORM:
+            PORT_PATTERN = "/dev/ttyUSB*"
+        else:
+            print("!!! Error: platform not yet supported !!!")
+            sys.exit(-1)
+
+        # Open serial port
+        devices = glob.glob(PORT_PATTERN)
+        print("devices: ", devices)
+        self.arduino = serial.Serial(devices[0], 115200)
+        while not self.arduino.isOpen():
+            print("Arduino not connected? devices[0]: " + devices[0])
+            time.sleep(0.5)
+        return self.arduino
+
+
+    # Handler to check for new files
+    def on_created(self, event):
+        message = bytes([int(os.path.getsize(event.src_path) / 1024)])
+        print(f"{event.src_path} has been created with size {os.path.getsize(event.src_path)/1024} KB!")
+        self.arduino.write(message)
+        # write(b'123456');
+
+    # Sets functin to call when new files are created
+    def handler_init(self):
+        path = "./flower/"
+        event_handler = LoggingEventHandler()
+        event_handler.on_created = self.on_created
+        self.observer.schedule(event_handler, path, recursive=True)
+        self.observer.start()
+
+
+    # Wait for event, or keyboard interrupt
+    def loop(self):
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self.observer.stop()
+        self.observer.join()
+
+
+    # desctuctor
+    def __del__(self):
+        self.arduino.close()
+        self.observer.stop()
+
+
+###############################################################################
+if __name__ == "__main__":
+    flower = Flower()
+    flower.loop()
 
 # send handshake byte to arduino
 
@@ -57,3 +93,4 @@ arduino.close()
 # delete contents of folder
 
 # send byte to arduino to retract
+

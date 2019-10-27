@@ -1,45 +1,58 @@
 // Receives file size from python
-// Calculates servo rotation amount 
+// Calculates servo rotation amount
 // Rotates amount if emergency stop not pressed (if file size == 0, retracts)
 // Watches for microphone input
 // If microphone is blown, sends byte to python to delete contents
 
-#include <Servo.h>
 
+
+#include <Servo.h>
 Servo flower;
-int emergencystop = 4;
+const long servo_on = 1410; // microsec
+const long servo_off = 1500; // microsec
+
+const long totalTime = 10 * 1E3; // 10 sec
+const long totalSize = 360; // KB
+
+const long biggestFile = 180; // KB
+const long smallestFile = 70; // KB
+
+long accumulator = 0;
+
 
 void setup() {
-  Serial.begin(9600);
-  pinMode(emergencystop, INPUT);
-  Serial.println('ready');
+    Serial.begin(115200);
+    Serial.println("Starting...");
+    flower.attach(9);
 }
 
+
 void loop()
-  {
-  char inByte = ' ';
-  
-  if (digitalRead(emergencystop) == HIGH)
-    {
-      Serial.println('READY');
-      
+{
     if (Serial.available())
-      {
-      char inByte = Serial.read();
-      Serial.println(inByte);
-      
-      // receive byte from python, maps to max, rotates amount
-      flower.attach(9);
-      flower.writeMicroseconds(1000); //1410
-      delay(500);
-      flower.detach();
-  
-      delay(2000);
-  
-      // watch for microphone sensor input
-      // if microphone is blown, arduino sends byte back to python to delete contents
-      }
-  
-    delay(100);
+    {
+        long fileSize = Serial.read();
+        Serial.println(fileSize); // KB
+        Serial.flush();
+
+        if (fileSize < smallestFile || fileSize > biggestFile) {
+            Serial.println("file is too small or too big");
+        } else {
+            long rotationTime = fileSize * totalTime / totalSize;
+            accumulator += rotationTime;
+
+            if (accumulator > totalTime) {
+                Serial.println("folder overflow");
+            } else {
+                flower.writeMicroseconds(servo_on);
+                delay(rotationTime);
+                flower.writeMicroseconds(servo_off);
+            }
+        }
+
+        // watch for microphone sensor input
+        // if microphone is blown, arduino sends byte back to python to delete contents
     }
-  }
+
+    delay(50);
+}
