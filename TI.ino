@@ -8,8 +8,9 @@
 
 #include <Servo.h>
 Servo flower;
-const long servo_on = 1410; // microsec
 const long servo_off = 1500; // microsec
+const long screw = servo_off + 36; // microsec
+const long unscrew = servo_off - 90; // microsec
 
 const long totalTime = 10 * 1E3; // 10 sec
 const long totalSize = 360; // KB
@@ -35,19 +36,27 @@ void loop()
         Serial.println(fileSize); // KB
         Serial.flush();
 
-        if (fileSize < smallestFile || fileSize > biggestFile) {
-            Serial.println("file is too small or too big");
-        } else {
+        if (fileSize > smallestFile && fileSize < biggestFile)
+        {
+            // rotate acoording to the file size
             long rotationTime = fileSize * totalTime / totalSize;
             accumulator += rotationTime;
 
             if (accumulator > totalTime) {
                 Serial.println("folder overflow");
             } else {
-                flower.writeMicroseconds(servo_on);
+                flower.writeMicroseconds(screw);
                 delay(rotationTime);
                 flower.writeMicroseconds(servo_off);
             }
+        } else if (fileSize == 0) {
+            // go back to initial position
+            flower.writeMicroseconds(unscrew);
+            delay(accumulator);
+            flower.writeMicroseconds(servo_off);
+            accumulator = 0;
+        } else {
+            Serial.println("file size incorrect");
         }
 
         // watch for microphone sensor input
