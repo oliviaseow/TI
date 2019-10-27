@@ -24,7 +24,7 @@ class Flower:
         # Set OS dependant variables
         PLATFORM = platform.system()
         if "Darwin" in PLATFORM:
-            PORT_PATTERN = "/dev/cu.usbserial*"
+            PORT_PATTERN = "/dev/cu.usb*"
         elif "Linux" in PLATFORM:
             PORT_PATTERN = "/dev/ttyUSB*"
         else:
