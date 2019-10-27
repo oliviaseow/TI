@@ -19,6 +19,7 @@ const long biggestFile = 180; // KB
 const long smallestFile = 70; // KB
 
 long accumulator = 0;
+long manual_control = 500;
 
 
 void setup() {
@@ -47,17 +48,29 @@ void loop()
             } else {
                 flower.writeMicroseconds(screw);
                 delay(rotationTime);
-                flower.writeMicroseconds(servo_off);
             }
-        } else if (fileSize == 0) {
+        } else if (fileSize == '0') {
             // go back to initial position
+            Serial.println("Reset");
             flower.writeMicroseconds(unscrew);
             delay(accumulator);
-            flower.writeMicroseconds(servo_off);
+            accumulator = 0;
+        } else if (fileSize == '<') {               // screw manually
+            // go back to initial position
+            Serial.println("screwing");
+            flower.writeMicroseconds(screw);
+            delay(manual_control);
+            accumulator += manual_control;
+        } else if (fileSize == '>') {               // UNscrew manually
+            // go back to initial position
+            Serial.println("unscrewing");
+            flower.writeMicroseconds(unscrew);
+            delay(manual_control);
             accumulator = 0;
         } else {
             Serial.println("file size incorrect");
         }
+        flower.writeMicroseconds(servo_off);
 
         // watch for microphone sensor input
         // if microphone is blown, arduino sends byte back to python to delete contents
