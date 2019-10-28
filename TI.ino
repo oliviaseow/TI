@@ -84,6 +84,7 @@ void handleNoise() {
     if (level < threshold  &&  oldLevel > threshold) {
         // send reset command to computer:
         reset();
+        flower.writeMicroseconds(servo_off);
     }
     oldLevel = level;
 }
