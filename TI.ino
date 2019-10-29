@@ -26,9 +26,6 @@ void setup() {
     Serial.begin(115200);
     Serial.println("Starting...");
     flower.attach(9);
-
-    // TEMPORARY!
-    pinMode(A0, INPUT_PULLUP);
 }
 
 
@@ -76,17 +73,22 @@ void handleSerial()
 
 
 void handleNoise() {
-    const long threshold = 700; // max is 1023
-    static long oldLevel = 0;
+    const long threshold = 1000;
+    static long trig_cnt = 0;
+    float noise_detected = digitalRead(A0);
 
-    long level = analogRead(A0);
-    //if (level > threshold  &&  oldLevel < threshold) { // TEMPORARY
-    if (level < threshold  &&  oldLevel > threshold) {
-        // send reset command to computer:
-        reset();
-        flower.writeMicroseconds(servo_off);
+    if (noise_detected) { // TEMPORARY
+        trig_cnt++;
+        delay(1);
+        if (trig_cnt > threshold) {
+            // send reset command to computer:
+            reset();
+            flower.writeMicroseconds(servo_off);
+            trig_cnt = 0;
+        }
     }
-    oldLevel = level;
+    else
+        trig_cnt = 0;
 }
 
 
