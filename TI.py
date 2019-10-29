@@ -28,7 +28,7 @@ class Flower:
         elif "Linux" in PLATFORM:
             PORT_PATTERN = "/dev/ttyUSB*"
         else:
-            print("!!! Error: platform not yet supported !!!")
+            print("Error: platform not yet supported")
             sys.exit(-1)
 
         # Open serial port
@@ -44,7 +44,7 @@ class Flower:
     # Handler to check for new files
     def on_created(self, event):
         message = bytes([int(os.path.getsize(event.src_path) / 1024)])
-        print(f"{event.src_path} has been created with size {os.path.getsize(event.src_path)/1024} KB!")
+        print(f"{event.src_path} has been created with size {os.path.getsize(event.src_path)/1024} KB")
         self.arduino.write(message)
         # write(b'123456');
 
@@ -61,11 +61,15 @@ class Flower:
     def loop(self):
         while True:
             time.sleep(0.1)
-            received = self.arduino.readline();
-            print(received)
-            if (b'!' in received):
-                os.system("rm ./flower/*.jpg")
-                print("DATA DELETED")
+            received = ""
+            try:
+                received = self.arduino.readline()
+                print(received)
+                if (b'!' in received):
+                    os.system("rm ./flower/*.jpg")
+                    print("DATA DELETED")
+            except:
+                print("error: ", received)
 
 
 

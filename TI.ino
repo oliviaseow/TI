@@ -9,8 +9,8 @@
 #include <Servo.h>
 Servo flower;
 const long servo_off = 1500; // microsec
-const long screw = servo_off + 36; // microsec
-const long unscrew = servo_off - 88; // microsec
+const long unscrew = servo_off + 25; // microsec
+const long screw = servo_off - 80; // microsec
 
 const long totalTime = 10 * 1E3; // 10 sec
 const long totalSize = 360; // KB
